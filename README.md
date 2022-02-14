@@ -1,6 +1,6 @@
 # LiteWare.ObjectInvokers
 
-[![Version](https://img.shields.io/nuget/v/LiteWare.ObjectInvokers)](https://img.shields.io/nuget/v/LiteWare.ObjectInvokers)
+[![Version](https://img.shields.io/nuget/v/LiteWare.ObjectInvokers)](https://www.nuget.org/packages/LiteWare.ObjectInvokers)
 
 Dynamically invoke methods and modify properties or fields of an object by referencing the member's name.
 This is done via the `ObjectInvoker.Invoke` method which accepts a member name and any generic types and/or parameters and redirects the call to a concrete object.
@@ -62,5 +62,5 @@ public interface IMyService
 Finally, the members can be dynamically invoked by member name:
 
 ``` cs
-int result = objectInvoker.Invoke("MyFunction", 123);
+int result = (int)objectInvoker.Invoke("MyFunction", 123);
 ```
