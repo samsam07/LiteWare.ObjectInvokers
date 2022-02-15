@@ -15,6 +15,7 @@
     <RepositoryUrl>https://github.com/samsam07/LiteWare.ObjectInvokers</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReleaseNotes>Initial code commit</PackageReleaseNotes>
+    <PackageTags>dynamic; reflection; invoke</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

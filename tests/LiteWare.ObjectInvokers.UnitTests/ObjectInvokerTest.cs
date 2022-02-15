@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using LiteWare.ObjectInvokers.Attributes;
 using LiteWare.ObjectInvokers.Exceptions;
 using Moq;
 using NUnit.Framework;
@@ -10,7 +11,25 @@ namespace LiteWare.ObjectInvokers.UnitTests;
 public class ObjectInvokerTest
 {
     private const string DummyMemberName = "DummyMember";
+    private const string PropertyName = "Prop";
+    private const int PropertyValue = 100;
+
     private readonly object _dummyInstance = new();
+
+    #region Stubs
+
+    private interface IService
+    {
+        [InvokableMember(PropertyName)]
+        int Property { get; set; }
+    }
+
+    private class StubService : IService
+    {
+        public int Property { get; set; } = PropertyValue;
+    }
+
+    #endregion
 
     private IObjectMember MockMember(int deviancyScore, object? invokeResult = null) =>
         Mock.Of<IObjectMember>
@@ -67,5 +86,16 @@ public class ObjectInvokerTest
 
         AmbiguousMemberInvokeException exception = Assert.Throws<AmbiguousMemberInvokeException>(() => objectInvoker.Invoke(DummyMemberName))!;
         Assert.That(exception.AmbiguousMembers, Has.Exactly(3).Items);
+    }
+
+    [Test]
+    public void Bind_Should_()
+    {
+        StubService stubService = new();
+
+        ObjectInvoker objectInvoker = ObjectInvoker.Bind<IService>(stubService);
+        int result = (int)objectInvoker.Invoke(PropertyName)!;
+
+        Assert.That(result, Is.EqualTo(PropertyValue));
     }
 }

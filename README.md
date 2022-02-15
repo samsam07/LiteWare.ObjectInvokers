@@ -10,20 +10,20 @@ Depending on the underlying concrete object member, the invoke process can:
 - Invoke a method and return the result if the member is a method:
 
     ``` cs
-    bool success = (bool)objectInvoker.Invoke("SetLightSwitchState", "SW012", LightSwitchState.On);
+    bool success = (bool)objectInvoker.Invoke("SetLightSwitchState", "SW012", LightSwitchState.On)!;
     ```
 
 - Get or set a property if the member is a property:
 
     ``` cs
-    string id = (string)objectInvoker.Invoke("DeviceId"); // Property getter
+    string id = (string)objectInvoker.Invoke("DeviceId")!; // Property getter
     objectInvoker.Invoke("DeviceDescription", "Livingroom light switch"); // Property setter
     ```
 
 - Get or set a field value if the member is a field:
 
     ``` cs
-    int timeout = (int)objectInvoker.Invoke("Timeout"); // Get field value
+    int timeout = (int)objectInvoker.Invoke("Timeout")!; // Get field value
     objectInvoker.Invoke("Timeout", 1000); // Set field value
     ```
 
@@ -62,5 +62,5 @@ public interface IMyService
 Finally, the members can be dynamically invoked by member name:
 
 ``` cs
-int result = (int)objectInvoker.Invoke("MyFunction", 123);
+int result = (int)objectInvoker.Invoke("MyFunction", 123)!;
 ```
