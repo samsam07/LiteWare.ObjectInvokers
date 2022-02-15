@@ -1,7 +1,7 @@
 # LiteWare.ObjectInvokers
 
+[![Nuget](https://img.shields.io/nuget/v/LiteWare.ObjectInvokers)](https://www.nuget.org/packages/LiteWare.ObjectInvokers)
 [![License](https://img.shields.io/github/license/samsam07/LiteWare.ObjectInvokers)](https://github.com/samsam07/LiteWare.ObjectInvokers/blob/master/LICENSE)
-[![Version](https://img.shields.io/nuget/v/LiteWare.ObjectInvokers)](https://www.nuget.org/packages/LiteWare.ObjectInvokers)
 
 Dynamically invoke methods and modify properties or fields of an object by referencing the member's name.
 This is done via the `ObjectInvoker.Invoke` method which accepts a member name and any generic types and/or parameters and redirects the call to a concrete object.
