@@ -20,7 +20,7 @@ public class ObjectInvokerTest
 
     private interface IService
     {
-        [InvokableMember(PropertyName)]
+        [Invokable(PropertyName)]
         int Property { get; set; }
     }
 
@@ -89,7 +89,7 @@ public class ObjectInvokerTest
     }
 
     [Test]
-    public void Bind_Should_()
+    public void Bind_Should_ConstructObjectInvokerWithMarkedMembers()
     {
         StubService stubService = new();
 

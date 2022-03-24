@@ -3,65 +3,109 @@
 [![Nuget](https://img.shields.io/nuget/v/LiteWare.ObjectInvokers)](https://www.nuget.org/packages/LiteWare.ObjectInvokers)
 [![License](https://img.shields.io/github/license/samsam07/LiteWare.ObjectInvokers)](https://github.com/samsam07/LiteWare.ObjectInvokers/blob/master/LICENSE)
 
-Dynamically invoke methods and modify properties or fields of an object by referencing the member's name.
-This is done via the `ObjectInvoker.Invoke` method which accepts a member name and any generic types and/or parameters and redirects the call to a concrete object.
+LiteWare.ObjectInvokers allows you to dynamically invoke methods and modify properties or fields at runtime by specifying the member's name, for example:
+
+``` csharp
+ObjectInvoker objectInvoker = ObjectInvoker.Bind<IIotHub>(iotHub);
+objectInvoker.Invoke("InitializeIotHub", "HUB01", MaxDeviceCout);
+```
+
+Events can also be monitored, for example:
+
+``` csharp
+using EventListener eventListener = EventListener.Bind<IIotHub>(iotHub, eventNotifier);
+eventListener.StartListening();
+```
+
+This library is useful in scenarios where an external system wants to dynamically invoke or listen for events of an internal object.
+
+## Usage
+
+Start by defining a contract type containing the members to invoke and/or the events to listen to:
+
+``` csharp
+public interface IMyService
+{
+    [Listenable]
+    event EventHandler MyEvent;
+
+    [Invokable]
+    int MyProperty { get; set; }
+
+    [Invokable]
+    void MyProcedure();
+
+    [Invokable("MyFunction")]
+    int SomeFunction(int arg);
+}
+```
+
+The contract type is not limited to only interfaces and can be of any type.
+However, it must either have members qualified by the `InvokableAttribute` or `ListenableAttribute` or a predicate must be provided during binding
+to select wanted members.
+
+`InvokableAttribute` and `ListenableAttribute` can also be applied on `private` members.
+
+### ObjectInvoker
+
+Dynamic invoke of methods and modification of properties or fields is done by the `ObjectInvoker.Invoke` method,
+which accepts a member name and any generic types and/or parameters and redirects the call to a concrete object.
+
+An instance of `ObjectInvoker` is created by binding a contract type containing the members to invoke to an instance of the contract:
+
+``` csharp
+ObjectInvoker objectInvoker = ObjectInvoker.Bind<IMyService>(myService);
+```
 
 Depending on the underlying concrete object member, the invoke process can:
 
 - Invoke a method and return the result if the member is a method:
 
-    ``` cs
-    bool success = (bool)objectInvoker.Invoke("SetLightSwitchState", "SW012", LightSwitchState.On)!;
+    ``` csharp
+    bool? success = objectInvoker.Invoke("SetLightSwitchState", "SW012", LightSwitchState.On) as bool?;
     ```
 
 - Get or set a property if the member is a property:
 
-    ``` cs
-    string id = (string)objectInvoker.Invoke("DeviceId")!; // Property getter
+    ``` csharp
+    string? id = objectInvoker.Invoke("DeviceId") as string?; // Property getter
     objectInvoker.Invoke("DeviceDescription", "Livingroom light switch"); // Property setter
     ```
 
 - Get or set a field value if the member is a field:
 
-    ``` cs
-    int timeout = (int)objectInvoker.Invoke("Timeout")!; // Get field value
+    ``` csharp
+    int? timeout = objectInvoker.Invoke("Timeout") as int?; // Get field value
     objectInvoker.Invoke("Timeout", 1000); // Set field value
     ```
 
-This library is useful in scenarios like RPC/RMI, where a remote endpoint wants to invoke a local method by specifying its name.
+### EventListener
 
-## Installation
+The monitoring of raised events is done by the `EventListener` class which hooks listenable events on a concrete object to runtime-created
+subscriber delegates that notifies using instances of `IEventNotifier`.
 
-The library is available as a [Nuget Package](https://www.nuget.org/packages/LiteWare.ObjectInvokers/).
+This is done as follows:
 
-## Usage
-
-To dynamically invoke members by member name, an `ObjectInvoker` needs to be created, usually by binding a contract type containing the members to invoke to an instance of the contract:
-
-``` cs
-ObjectInvoker objectInvoker = ObjectInvoker.Bind<IMyService>(myService);
+``` csharp
+using EventListener eventListener = EventListener.Bind<IMyService>(myService, eventNotifier1, eventNotifier2);
+eventListener.StartListening();
 ```
 
-The contract type is not limited to only interfaces and can be of any type. However, it must have members qualified by the `InvokableMemberAttribute` so that they can be invoked:
+`eventNotifier1` and `eventNotifier2` are cutom implementations of `IEventNotifier`.
+They will notify the event name and any associated event arguments when an event is raised on the concrete class `myService`.
 
-``` cs
-public interface IMyService
+``` csharp
+public class EventNotifier : IEventNotifier
 {
-    [InvokableMember]
-    int MyProperty { get; set; }
-
-    [InvokableMember]
-    void MyProcedure();
-
-    [InvokableMember("MyFunction")]
-    int SomeFunction(int arg);
+    public void NotifyEvent(string eventName, object?[] arguments)
+    {
+        // Triggered when an event is raised
+    }
 }
+
+...
+
+EventNotifier eventNotifier = new();
 ```
 
-> `InvokableMemberAttribute` can also be applied on `private` members.
-
-Finally, the members can be dynamically invoked by member name:
-
-``` cs
-int result = (int)objectInvoker.Invoke("MyFunction", 123)!;
-```
+By default, new instance of `EventListener` does not listen for raised events. The `EventListener.StartListening` method must be called to do so.
