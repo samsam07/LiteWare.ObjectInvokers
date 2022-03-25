@@ -1,4 +1,5 @@
-﻿using LiteWare.ObjectInvokers.Attributes;
+﻿using System.Reflection;
+using LiteWare.ObjectInvokers.Attributes;
 using LiteWare.ObjectInvokers.Exceptions;
 using LiteWare.ObjectInvokers.Extensions;
 
@@ -12,33 +13,75 @@ public class ObjectInvoker
     /// <summary>
     /// Builds an <see cref="ObjectInvoker"/> by binding the extracted members from <paramref name="contractType"/> to an object instance for indirect member invokes.
     /// </summary>
-    /// <param name="contractType">The type on which members marked by the <see cref="InvokableMemberAttribute"/> will be extracted for member invokes.</param>
+    /// <param name="contractType">The type on which members will be extracted for member invokes.</param>
+    /// <param name="targetInstance">The object instance on which member invokes will take place.</param>
+    /// <param name="memberMatch">A predicate to filter members from <paramref name="contractType"/>.</param>
+    /// <param name="preferredNameSelector">A function that returns the preferred name of a specific member.</param>
+    /// <returns>An <see cref="ObjectInvoker"/> that allow indirect member invokes.</returns>
+    public static ObjectInvoker Bind(Type contractType, object targetInstance, Predicate<MemberInfo> memberMatch, Func<MemberInfo, string?>? preferredNameSelector = null)
+    {
+        List<IObjectMember> objectMembers = contractType
+            .ExtractInvokableMembers(memberMatch, preferredNameSelector)
+            .ToList();
+
+        return new ObjectInvoker(objectMembers, targetInstance);
+    }
+
+    /// <summary>
+    /// Builds an <see cref="ObjectInvoker"/> by binding the extracted members from <paramref name="contractType"/> to an object instance for indirect member invokes.
+    /// </summary>
+    /// <param name="contractType">The type on which members marked by the <see cref="InvokableAttribute"/> will be extracted for member invokes.</param>
     /// <param name="targetInstance">The object instance on which member invokes will take place.</param>
     /// <returns>An <see cref="ObjectInvoker"/> that allow indirect member invokes.</returns>
-    /// <remarks>Only members defining the <see cref="InvokableMemberAttribute"/> attribute will be extracted from <paramref name="contractType"/> for member invokes.</remarks>
+    /// <remarks>Only members defining the <see cref="InvokableAttribute"/> attribute will be extracted from <paramref name="contractType"/> for member invokes.</remarks>
     public static ObjectInvoker Bind(Type contractType, object targetInstance)
     {
-        List<IObjectMember> objectMembers = contractType.FindInvokableMembers().ToList();
+        List<IObjectMember> objectMembers = contractType
+            .FindInvokableMembers()
+            .ToList();
+
         return new ObjectInvoker(objectMembers, targetInstance);
     }
 
     /// <summary>
     /// Builds an <see cref="ObjectInvoker"/> by binding the extracted members from the type <typeparamref name="TContract"/> to an object instance for indirect member invokes.
     /// </summary>
-    /// <typeparam name="TContract">The type on which members marked by the <see cref="InvokableMemberAttribute"/> will be extracted for member invokes.</typeparam>
+    /// <typeparam name="TContract">The type on which members will be extracted for member invokes.</typeparam>
+    /// <param name="targetInstance">The object instance on which member invokes will take place.</param>
+    /// <param name="memberMatch">A predicate to filter members the type <typeparamref name="TContract"/>.</param>
+    /// <param name="preferredNameSelector">A function that returns the preferred name of a specific member.</param>
+    /// <returns>An <see cref="ObjectInvoker"/> that allow indirect member invokes.</returns>
+    public static ObjectInvoker Bind<TContract>(object targetInstance, Predicate<MemberInfo> memberMatch, Func<MemberInfo, string?>? preferredNameSelector = null) =>
+        Bind(typeof(TContract), targetInstance, memberMatch, preferredNameSelector);
+
+    /// <summary>
+    /// Builds an <see cref="ObjectInvoker"/> by binding the extracted members from the type <typeparamref name="TContract"/> to an object instance for indirect member invokes.
+    /// </summary>
+    /// <typeparam name="TContract">The type on which members marked by the <see cref="InvokableAttribute"/> will be extracted for member invokes.</typeparam>
     /// <param name="targetInstance">The object instance on which member invokes will take place.</param>
     /// <returns>An <see cref="ObjectInvoker"/> that allow indirect member invokes.</returns>
-    /// <remarks>Only members defining the <see cref="InvokableMemberAttribute"/> attribute will be extracted from the type <typeparamref name="TContract"/> for member invokes.</remarks>
+    /// <remarks>Only members defining the <see cref="InvokableAttribute"/> attribute will be extracted from the type <typeparamref name="TContract"/> for member invokes.</remarks>
     public static ObjectInvoker Bind<TContract>(object targetInstance) =>
         Bind(typeof(TContract), targetInstance);
 
     /// <summary>
     /// Builds an <see cref="ObjectInvoker"/> by binding the extracted members from the type <typeparamref name="TContract"/> to an object instance for indirect member invokes.
     /// </summary>
-    /// <typeparam name="TContract">The type on which members marked by the <see cref="InvokableMemberAttribute"/> will be extracted for member invokes.</typeparam>
+    /// <typeparam name="TContract">The type on which members will be extracted for member invokes.</typeparam>
+    /// <param name="targetInstance">The object instance on which member invokes will take place.</param>
+    /// <param name="memberMatch">A predicate to filter members the type <typeparamref name="TContract"/>.</param>
+    /// <param name="preferredNameSelector">A function that returns the preferred name of a specific member.</param>
+    /// <returns>An <see cref="ObjectInvoker"/> that allow indirect member invokes.</returns>
+    public static ObjectInvoker Bind<TContract>(TContract targetInstance, Predicate<MemberInfo> memberMatch, Func<MemberInfo, string?>? preferredNameSelector = null) where TContract : notnull =>
+        Bind(typeof(TContract), targetInstance, memberMatch, preferredNameSelector);
+
+    /// <summary>
+    /// Builds an <see cref="ObjectInvoker"/> by binding the extracted members from the type <typeparamref name="TContract"/> to an object instance for indirect member invokes.
+    /// </summary>
+    /// <typeparam name="TContract">The type on which members marked by the <see cref="InvokableAttribute"/> will be extracted for member invokes.</typeparam>
     /// <param name="targetInstance">The object instance on which member invokes will take place.</param>
     /// <returns>An <see cref="ObjectInvoker"/> that allow indirect member invokes.</returns>
-    /// <remarks>Only members defining the <see cref="InvokableMemberAttribute"/> attribute will be extracted from the type <typeparamref name="TContract"/> for member invokes.</remarks>
+    /// <remarks>Only members defining the <see cref="InvokableAttribute"/> attribute will be extracted from the type <typeparamref name="TContract"/> for member invokes.</remarks>
     public static ObjectInvoker Bind<TContract>(TContract targetInstance) where TContract : notnull =>
         Bind(typeof(TContract), targetInstance);
 
@@ -85,13 +128,7 @@ public class ObjectInvoker
             .ToList()
             .AsReadOnly();
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ObjectInvoker"/> class with the provided list of invokable members for the provided object instance.
-    /// </summary>
-    /// <param name="objectMembers">A list of invokable members.</param>
-    /// <param name="targetInstance">The object instance on which member invokes will take place.</param>
-    /// <exception cref="ArgumentNullException">The <paramref name="objectMembers"/> is <code>null</code>.</exception>
-    public ObjectInvoker(List<IObjectMember> objectMembers, object targetInstance)
+    internal ObjectInvoker(List<IObjectMember> objectMembers, object targetInstance)
     {
         _objectMembers = objectMembers ?? throw new ArgumentNullException(nameof(objectMembers));
         TargetInstance = targetInstance;
